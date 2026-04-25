@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sistem Kristal Tetragonal - Visualisasi 3D Interaktif | Edukasi Kristalografi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background: #0a0a2a;
+        }
+        
+        /* Panel Info Utama */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, rgba(10,20,40,0.92), rgba(5,10,25,0.95));
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 18px 24px;
+            color: white;
+            border-left: 5px solid #ff9800;
+            border-right: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 20;
+            max-width: 320px;
+            pointer-events: none;
+            font-weight: 500;
+        }
+        
+        .info-panel h1 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-panel h1 span {
+            background: #ff9800;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .info-panel p {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+        
+        .param-box {
+            margin-top: 12px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255,140,0,0.4);
+        }
+        
+        /* Panel Kontrol Utama */
+        .control-panel {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 60px;
+            padding: 10px 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 30;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+        
+        .ctrl-btn {
+            background: linear-gradient(135deg, #1e2a3a, #0f1722);
+            border: none;
+            color: white;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #ff9800;
+        }
+        
+        .ctrl-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            border-bottom-color: white;
+            box-shadow: 0 5px 15px rgba(255,152,0,0.3);
+        }
+        
+        .active-type {
+            background: rgba(255,152,0,0.25);
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #ff9800;
+        }
+        
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff9800;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(1); box-shadow: 0 0 0 0 rgba(255,152,0,0.4);}
+            70% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 0 6px rgba(255,152,0,0);}
+            100% { opacity: 0.4; transform: scale(1);}
+        }
+        
+        /* Sidebar kanan untuk info detail */
+        .detail-card {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 16px 20px;
+            width: 260px;
+            border-right: 3px solid #ff9800;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
+            font-size: 0.8rem;
+            color: #ddd;
+            z-index: 20;
+        }
+        
+        .detail-card h4 {
+            color: #ff9800;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        
+        .detail-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .detail-card li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge {
+            font-family: monospace;
+            background: #1e2a3a;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #ffaa66;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #333;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        /* Tooltip hint */
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.7rem;
+            color: #aaa;
+            pointer-events: none;
+            font-family: monospace;
+            z-index: 20;
+        }
+        
+        @media (max-width: 800px) {
+            .control-panel { padding: 6px 12px; gap: 8px; bottom: 15px; }
+            .ctrl-btn { padding: 6px 16px; font-size: 0.8rem; }
+            .info-panel { max-width: 260px; padding: 12px 16px; top: 12px; left: 12px; }
+            .detail-card { display: none; }
+            .active-type { padding: 4px 12px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="info-panel">
+        <h1>🔮 SISTEM KRISTAL <span>TETRAGONAL</span></h1>
+        <p>a = b <strong>≠</strong> c &nbsp; | &nbsp; α = β = γ = 90°</p>
+        <div class="param-box">
+            📐 Parameter: a = b = 1.0 | c = 1.6 (rasio aspek visual)<br>
+            🧊 Tipe Kisi: Primitive (P) & Body-Centered (I)
+        </div>
+        <p style="font-size:0.75rem; margin-top:8px;">✅ Sel satuan berbentuk prisma segiempat dengan tinggi berbeda</p>
+    </div>
+    
+    <div class="control-panel">
+        <button id="btnPrimitive" class="ctrl-btn">🔷 PRIMITIVE (P)</button>
+        <button id="btnBodyCentered" class="ctrl-btn">🔶 BODY-CENTERED (I)</button>
+        <div class="active-type" id="latticeStatus">
+            <div class="indicator"></div>
+            <span id="typeName">Primitive (P)</span>
+        </div>
+    </div>
+    
+    <div class="detail-card">
+        <h4>📖 Penjelasan Struktur</h4>
+        <ul>
+            <li>🔵 <strong>Atom Sudut</strong> (8 titik) — Berbagi dengan sel tetangga</li>
+            <li id="specialAtomDesc">🔴 <strong>Tidak ada atom pusat</strong> (Primitive)</li>
+        </ul>
+        <div class="legend">
+            <div><span class="legend-color" style="background:#3a86ff;"></span> Atom Sudut</div>
+            <div id="centerLegend" style="opacity:0.5;"><span class="legend-color" style="background:#ff6d3a;"></span> Atom Pusat</div>
+        </div>
+        <div style="margin-top:12px; font-size:0.7rem; color:#aaa;">
+            💡 <strong>Karakteristik:</strong><br>
+            • Sumbu c lebih panjang dari a & b<br>
+            • Contoh mineral: <strong>Rutil (TiO₂), Zirkon (ZrSiO₄)</strong>
+        </div>
+    </div>
+    <div class="hint">
+        🖱️ Drag untuk rotasi | Scroll zoom | Klik kanan + drag untuk geser kamera
+    </div>
+
+    <!-- Import Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+        
+        // ---------- KONFIGURASI KISI TETRAGONAL (rasio jelas) ----------
+        const a = 2.0;      // panjang sumbu a dan b
+        const c = 3.2;      // panjang sumbu c => c/a = 1.6, sangat khas tetragonal
+        
+        // Koordinat 8 sudut sel satuan (unit cell)
+        const corners = [
+            new THREE.Vector3(0, 0, 0),     // 0
+            new THREE.Vector3(a, 0, 0),     // 1
+            new THREE.Vector3(a, a, 0),     // 2
+            new THREE.Vector3(0, a, 0),     // 3
+            new THREE.Vector3(0, 0, c),     // 4
+            new THREE.Vector3(a, 0, c),     // 5
+            new THREE.Vector3(a, a, c),     // 6
+            new THREE.Vector3(0, a, c)      // 7
+        ];
+        
+        // Pasangan rusuk (12 edges)
+        const edgesPairs = [
+            [0,1], [1,2], [2,3], [3,0], // alas bawah
+            [4,5], [5,6], [6,7], [7,4], // atas
+            [0,4], [1,5], [2,6], [3,7]  // vertikal
+        ];
+        
+        // ---------- Setup Scene & Renderer ----------
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050b1a);
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.008);
+        
+        // Kamera yang optimal untuk melihat perbedaan tinggi
+        const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(4.5, 3.8, 5.2);
+        camera.lookAt(a/2, a/2, c/2);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        
+        // CSS2 Renderer untuk teks elegan
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+        
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.rotateSpeed = 1.2;
+        controls.zoomSpeed = 1.0;
+        controls.panSpeed = 0.8;
+        controls.target.set(a/2, a/2, c/2);
+        
+        // ---------- Pencahayaan Dramatis ----------
+        const ambientLight = new THREE.AmbientLight(0x2c2c54);
+        scene.add(ambientLight);
+        
+        const mainLight = new THREE.DirectionalLight(0xfff5e0, 1.2);
+        mainLight.position.set(3, 5, 2);
+        mainLight.castShadow = true;
+        mainLight.receiveShadow = false;
+        scene.add(mainLight);
+        
+        const fillLight = new THREE.PointLight(0x4488ff, 0.4);
+        fillLight.position.set(1, 2, 3);
+        scene.add(fillLight);
+        
+        const backLight = new THREE.PointLight(0xffaa66, 0.35);
+        backLight.position.set(-1.5, 2, -2);
+        scene.add(backLight);
+        
+        const rimLight = new THREE.PointLight(0xff66aa, 0.25);
+        rimLight.position.set(1, 1, -2.5);
+        scene.add(rimLight);
+        
+        // Bantuan visual: grid tipis di lantai
+        const gridHelper = new THREE.GridHelper(6, 20, 0x88aaff, 0x335588);
+        gridHelper.position.y = -0.15;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.3;
+        scene.add(gridHelper);
+        
+        // Sumbu koordinat transparan
+        const axesHelper = new THREE.AxesHelper(4);
+        axesHelper.material.transparent = true;
+        axesHelper.material.opacity = 0.2;
+        scene.add(axesHelper);
+        
+        // ---------- Label Sumbu (CSS2D) ----------
+        function makeAxisLabel(text, position, colorHex) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = colorHex;
+            div.style.fontSize = '22px';
+            div.style.fontWeight = 'bold';
+            div.style.fontFamily = 'monospace';
+            div.style.textShadow = '1px 1px 0px black';
+            div.style.background = 'rgba(0,0,0,0.5)';
+            div.style.padding = '2px 8px';
+            div.style.borderRadius = '30px';
+            div.style.borderLeft = `3px solid ${colorHex}`;
+            div.style.backdropFilter = 'blur(5px)';
+            const label = new CSS2DObject(div);
+            label.position.copy(position);
+            return label;
+        }
+        
+        const labelA = makeAxisLabel('a (sumbu X)', new THREE.Vector3(a + 0.3, -0.2, -0.2), '#ffaa77');
+        const labelB = makeAxisLabel('b (sumbu Y)', new THREE.Vector3(-0.2, a + 0.3, -0.2), '#ffaa77');
+        const labelC = makeAxisLabel('c (sumbu Z) — lebih panjang', new THREE.Vector3(-0.3, -0.3, c + 0.5), '#ffaa77');
+        scene.add(labelA);
+        scene.add(labelB);
+        scene.add(labelC);
+        
+        // Tambahkan label rasio di tengah
+        const ratioDiv = document.createElement('div');
+        ratioDiv.textContent = `📐 c/a = ${(c/a).toFixed(2)}  |  Tetragonal: a = b ≠ c`;
+        ratioDiv.style.background = '#000000aa';
+        ratioDiv.style.padding = '4px 12px';
+        ratioDiv.style.borderRadius = '20px';
+        ratioDiv.style.fontSize = '12px';
+        ratioDiv.style.fontFamily = 'monospace';
+        ratioDiv.style.color = '#ffcc88';
+        const ratioLabel = new CSS2DObject(ratioDiv);
+        ratioLabel.position.set(a/2, -0.45, c/2);
+        scene.add(ratioLabel);
+        
+        // ---------- Fungsi Pembuatan Elemen Visual ----------
+        let currentAtomsGroup = null;
+        let currentEdgesGroup = null;
+        
+        // Edge dengan garis berkualitas + efek glowing tipis
+        function createEdges() {
+            const group = new THREE.Group();
+            const positions = [];
+            edgesPairs.forEach(edge => {
+                const v1 = corners[edge[0]];
+                const v2 = corners[edge[1]];
+                positions.push(v1.x, v1.y, v1.z);
+                positions.push(v2.x, v2.y, v2.z);
+            });
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x5aaeff, linewidth: 1 }); // linewidth limited
+            const wireframe = new THREE.LineSegments(geometry, lineMat);
+            group.add(wireframe);
+            
+            // Tambahkan titik-titik kecil di vertex sudut sebagai aksen (glow dots)
+            const dotMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, emissive: 0x2266aa, emissiveIntensity: 0.4 });
+            corners.forEach(pos => {
+                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), dotMat);
+                dot.position.copy(pos);
+                group.add(dot);
+            });
+            return group;
+        }
+        
+        // Membuat atom-atom dengan kualitas material premium
+        function createAtoms(latticeType) {
+            const group = new THREE.Group();
+            // Material sudut: biru metalik dengan gradien
+            const cornerMat = new THREE.MeshStandardMaterial({
+                color: 0x3a86ff,
+                roughness: 0.28,
+                metalness: 0.78,
+                emissive: 0x001c4a,
+                emissiveIntensity: 0.2
+            });
+            // Material pusat (kuning/oranye metalik)
+            const centerMat = new THREE.MeshStandardMaterial({
+                color: 0xff6d3a,
+                roughness: 0.25,
+                metalness: 0.85,
+                emissive: 0x442200,
+                emissiveIntensity: 0.18
+            });
+            
+            const radiusAtom = 0.23;
+            // 1. Atom sudut
+            corners.forEach(pos => {
+                const sphere = new THREE.Mesh(new THREE.SphereGeometry(radiusAtom, 48, 32), cornerMat);
+                sphere.position.copy(pos);
+                sphere.castShadow = true;
+                sphere.receiveShadow = false;
+                group.add(sphere);
+            });
+            
+            // 2. Jika body-centered, tambah atom pusat
+            if (latticeType === 'body-centered') {
+                const centerPos = new THREE.Vector3(a/2, a/2, c/2);
+                const centerSphere = new THREE.Mesh(new THREE.SphereGeometry(radiusAtom * 1.02, 56, 40), centerMat);
+                centerSphere.position.copy(centerPos);
+                centerSphere.castShadow = true;
+                group.add(centerSphere);
+            }
+            return group;
+        }
+        
+        // Tambahkan partikel dekorasi (bintang kecil untuk suasana 3D)
+        function addStarField() {
+            const starCount = 1200;
+            const positions = [];
+            for (let i = 0; i < starCount; i++) {
+                positions.push((Math.random() - 0.5) * 180);
+                positions.push((Math.random() - 0.5) * 100);
+                positions.push((Math.random() - 0.5) * 120 - 40);
+            }
+            const starGeo = new THREE.BufferGeometry();
+            starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+            const starMat = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.07, transparent: true, opacity: 0.5 });
+            const stars = new THREE.Points(starGeo, starMat);
+            scene.add(stars);
+        }
+        addStarField();
+        
+        // Tambahkan bounding box transparan untuk menonjolkan batas sel (visual)
+        function addTranslucentBoundary() {
+            const boxWidth = a;
+            const boxHeight = a;
+            const boxDepth = c;
+            const boxGeo = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+            const edgesGeo = new THREE.EdgesGeometry(boxGeo);
+            const wireframeBound = new THREE.LineSegments(edgesGeo, new THREE.LineBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.2 }));
+            wireframeBound.position.set(a/2, a/2, c/2);
+            scene.add(wireframeBound);
+            
+            // Tambahkan planar tipis di tengah (efek semi transparan) - optional
+            const planeMat = new THREE.MeshPhongMaterial({ color: 0x2266aa, side: THREE.DoubleSide, transparent: true, opacity: 0.05 });
+            const midPlane = new THREE.Mesh(new THREE.PlaneGeometry(a, a), planeMat);
+            midPlane.rotation.x = Math.PI / 2;
+            midPlane.position.set(a/2, a/2, c/2);
+            scene.add(midPlane);
+        }
+        addTranslucentBoundary();
+        
+        // Animasi sinar lembut di sekitar pusat (efek)
+        const glowRing = new THREE.Mesh(
+            new THREE.SphereGeometry(0.4, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0xffaa55, transparent: true, opacity: 0.2, side: THREE.BackSide })
+        );
+        glowRing.position.set(a/2, a/2, c/2);
+        scene.add(glowRing);
+        
+        // Fungsi untuk mereset tampilan kisi
+        let currentType = 'primitive';
+        function switchLatticeType(type) {
+            if (currentAtomsGroup) scene.remove(currentAtomsGroup);
+            if (currentEdgesGroup) scene.remove(currentEdgesGroup);
+            
+            const newEdges = createEdges();
+            currentEdgesGroup = newEdges;
+            scene.add(currentEdgesGroup);
+            
+            const newAtoms = createAtoms(type);
+            currentAtomsGroup = newAtoms;
+            scene.add(currentAtomsGroup);
+            
+            // Update UI
+            const typeNameSpan = document.getElementById('typeName');
+            const specialDesc = document.getElementById('specialAtomDesc');
+            const centerLegendDiv = document.getElementById('centerLegend');
+            
+            if (type === 'primitive') {
+                typeNameSpan.innerText = 'Primitive (P)';
+                specialDesc.innerHTML = '⚪ <strong>Tidak ada atom pusat</strong> (Hanya 8 atom sudut)';
+                centerLegendDiv.style.opacity = '0.4';
+                centerLegendDiv.style.filter = 'grayscale(0.5)';
+                glowRing.material.opacity = 0.1;
+            } else {
+                typeNameSpan.innerText = 'Body-Centered (I)';
+                specialDesc.innerHTML = '🟠 <strong>Satu atom pusat</strong> di koordinat (½,½,½)';
+                centerLegendDiv.style.opacity = '1';
+                centerLegendDiv.style.filter = 'none';
+                glowRing.material.opacity = 0.45;
+            }
+            currentType = type;
+        }
+        
+        // Inisialisasi primitive
+        switchLatticeType('primitive');
+        
+        // Event listeners
+        document.getElementById('btnPrimitive').addEventListener('click', () => switchLatticeType('primitive'));
+        document.getElementById('btnBodyCentered').addEventListener('click', () => switchLatticeType('body-centered'));
+        
+        // Tambahkan informasi interaktif dinamis berupa floating info di titik pusat (CSS2D untuk penjelasan)
+        const infoDiv = document.createElement('div');
+        infoDiv.textContent = '✨ Pusat sel (Body-Centered) ✨';
+        infoDiv.style.backgroundColor = '#ff9800cc';
+        infoDiv.style.color = '#111';
+        infoDiv.style.padding = '4px 12px';
+        infoDiv.style.borderRadius = '30px';
+        infoDiv.style.fontWeight = 'bold';
+        infoDiv.style.fontSize = '12px';
+        infoDiv.style.fontFamily = 'sans-serif';
+        infoDiv.style.backdropFilter = 'blur(4px)';
+        const centerHint = new CSS2DObject(infoDiv);
+        centerHint.position.set(a/2, a/2 - 0.45, c/2);
+        scene.add(centerHint);
+        
+        // Animasi sederhana untuk hint (fade setiap detik? tidak perlu)
+        let time = 0;
+        
+        // Animasi slight rotation glowRing + efek ambient
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            
+            time += 0.012;
+            // Efek halus pada ring pusat
+            if (currentType === 'body-centered') {
+                const scale = 1 + Math.sin(time * 3) * 0.05;
+                glowRing.scale.set(scale, scale, scale);
+                glowRing.material.opacity = 0.35 + Math.sin(time * 4) * 0.1;
+            } else {
+                glowRing.scale.set(0.9, 0.9, 0.9);
+            }
+            
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Resize handler
+        window.addEventListener('resize', onWindowResize);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Small console info
+        console.log('✨ Visualisasi Tetragonal | Primitive & Body-Centered | Rasio c/a = ' + (c/a).toFixed(2));
+    </script>
+</body>
+</html>
